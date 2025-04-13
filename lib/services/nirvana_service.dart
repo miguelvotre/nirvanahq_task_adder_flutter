@@ -12,19 +12,19 @@ class NirvanaService {
   final storage = FlutterSecureStorage();
   final uuid = Uuid();
   
-  void testarFuncionamento() {
-    print('NirvanaService está funcionando!');
+  void testFunctionality() {
+    print('NirvanaService is working!');
   }
 
-  // Converte string para MD5
+  // Convert string to MD5
   String _generateMd5(String input) {
     return crypto.md5.convert(utf8.encode(input)).toString();
   }
   
-  // Login com email e senha
+  // Login with email and password
   Future<String> login(String email, String password) async {
     try {
-      // Converter senha para MD5 como na extensão Chrome
+      // Convert password to MD5 as in Chrome extension
       final md5Password = _generateMd5(password);
       
       final url = '$baseUrl/auth/new?appid=$appId&appversion=$appVersion';
@@ -46,7 +46,7 @@ class NirvanaService {
           data['results'][0]['auth'] != null) {
         final token = data['results'][0]['auth']['token'];
         
-        // Salvar token e email
+        // Save token and email
         await storage.write(key: 'authToken', value: token);
         await storage.write(key: 'userEmail', value: email);
         
@@ -57,13 +57,13 @@ class NirvanaService {
         throw Exception(data['results'][0]['error']['message']);
       }
       
-      throw Exception('Falha no login');
+      throw Exception('Login failed');
     } catch (e) {
-      throw Exception('Erro de login: $e');
+      throw Exception('Login error: $e');
     }
   }
   
-  // Verificar se está logado
+  // Check if logged in
   Future<Map<String, String?>> checkAuth() async {
     final token = await storage.read(key: 'authToken');
     final email = await storage.read(key: 'userEmail');
@@ -74,14 +74,14 @@ class NirvanaService {
     };
   }
   
-  // Adicionar tarefa
+  // Add task
   Future<void> createTask(String title, String notes) async {
     try {
       final authToken = await storage.read(key: 'authToken');
-      if (authToken == null) throw Exception('Não autenticado');
+      if (authToken == null) throw Exception('Not authenticated');
       
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final taskId = uuid.v4(); // UUID para a tarefa
+      final taskId = uuid.v4(); // UUID for the task
       
       final params = {
         'return': 'everything',
@@ -159,7 +159,7 @@ class NirvanaService {
       
       return;
     } catch (e) {
-      throw Exception('Falha ao criar tarefa: $e');
+      throw Exception('Failed to create task: $e');
     }
   }
   

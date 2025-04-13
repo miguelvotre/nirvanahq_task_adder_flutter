@@ -9,21 +9,21 @@ import 'package:flutter/services.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Inicializa hotkey_manager para atalhos globais
+  // Initialize hotkey_manager for global shortcuts
   if (Platform.isWindows) {
-    // A versão atual não usa mais initialize()
+    // Current version doesn't use initialize() anymore
     await hotKeyManager.unregisterAll();
   }
   
-  // Verifica se está rodando no Windows
+  // Check if running on Windows
   if (Platform.isWindows) {
-    // Configuração específica para Windows
+    // Windows specific configuration
     await windowManager.ensureInitialized();
     await windowManager.setPreventClose(true);
     
-    // Define um tamanho menor para a janela no Windows
+    // Define a smaller window size for Windows
     WindowOptions windowOptions = const WindowOptions(
-      size: Size(400, 600), // Tamanho menor e mais compacto
+      size: Size(400, 600), // Smaller and more compact size
       center: true,
       backgroundColor: Colors.transparent,
       skipTaskbar: false,
@@ -55,7 +55,7 @@ class _MyAppState extends State<MyApp> {
     _checkAuth();
   }
 
-  // Verifica se o usuário já está autenticado
+  // Check if user is already authenticated
   Future<void> _checkAuth() async {
     final authInfo = await _nirvanaService.checkAuth();
     setState(() {
@@ -95,7 +95,7 @@ class _MyAppState extends State<MyApp> {
   }
 }
 
-// Tela de Login
+// Login Screen
 class LoginPage extends StatefulWidget {
   final Function(String) onLogin;
   
@@ -120,10 +120,10 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Future<void> _login() async {
-    // Validação básica
+    // Basic validation
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       setState(() {
-        _errorMessage = 'Por favor, preencha todos os campos';
+        _errorMessage = 'Please fill in all fields';
       });
       return;
     }
@@ -139,7 +139,7 @@ class _LoginPageState extends State<LoginPage> {
         _passwordController.text.trim()
       );
       
-      // Chama a função de callback para atualizar o estado do app
+      // Call callback function to update app state
       widget.onLogin(_emailController.text);
     } catch (e) {
       setState(() {
@@ -160,12 +160,12 @@ class _LoginPageState extends State<LoginPage> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Login Nirvana'),
+        title: const Text('Nirvana Login'),
       ),
       body: Center(
         child: ConstrainedBox(
           constraints: BoxConstraints(
-            maxWidth: isWindows ? 350 : 600, // Mais estreito no Windows
+            maxWidth: isWindows ? 350 : 600, // Narrower on Windows
           ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -185,7 +185,7 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                   controller: _passwordController,
                   decoration: const InputDecoration(
-                    labelText: 'Senha',
+                    labelText: 'Password',
                     border: OutlineInputBorder(),
                   ),
                   obscureText: true,
@@ -208,7 +208,7 @@ class _LoginPageState extends State<LoginPage> {
                           height: 24, 
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Entrar'),
+                      : const Text('Login'),
                 ),
               ],
             ),
@@ -219,7 +219,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-// Tela de Adicionar Tarefa
+// Add Task Screen
 class TaskPage extends StatefulWidget {
   final String userEmail;
   final VoidCallback onLogout;
@@ -244,7 +244,7 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
   void initState() {
     super.initState();
     
-    // Verifica se é Windows e inicializa funcionalidades específicas
+    // Check if Windows and initialize specific features
     _isWindows = Platform.isWindows;
     
     if (_isWindows) {
@@ -252,7 +252,7 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
       _registerHotkey();
     }
     
-    // Foca no campo de título na inicialização
+    // Focus on title field on initialization
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _titleFocusNode.requestFocus();
     });
@@ -273,38 +273,38 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
     super.dispose();
   }
   
-  // Inicializa recursos específicos do Windows
+  // Initialize Windows-specific resources
   Future<void> _initWindowsFeatures() async {
     windowManager.addListener(this);
     await _initTray();
   }
 
-  // Inicializa o system tray
+  // Initialize system tray
   Future<void> _initTray() async {
-    // Só inicializa no Windows
+    // Only initialize on Windows
     if (!_isWindows) return;
     
     trayManager.addListener(this);
     
-    // Atualizado para usar o caminho correto
+    // Updated to use correct path
     await trayManager.setIcon('assets/images/logo.ico');
     await trayManager.setToolTip("Nirvana Task Adder");
     
     await trayManager.setContextMenu(
       Menu(
         items: [
-          MenuItem(label: "Abrir", onClick: (menuItem) => _showWindow()),
-          MenuItem(label: "Sair", onClick: (menuItem) => _exitApp()),
+          MenuItem(label: "Open", onClick: (menuItem) => _showWindow()),
+          MenuItem(label: "Exit", onClick: (menuItem) => _exitApp()),
         ],
       ),
     );
   }
   
-  // Registra o atalho global Windows+Shift+A
+  // Register global shortcut Windows+Shift+A
   Future<void> _registerHotkey() async {
     HotKey hotKey = HotKey(
       KeyCode.keyA,
-      // Adiciona a tecla Windows (Meta) junto com Shift
+      // Add Windows key (Meta) together with Shift
       modifiers: [KeyModifier.shift, KeyModifier.meta],
       scope: HotKeyScope.system,
     );
@@ -317,27 +317,27 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
     );
   }
   
-  // Remove o registro do atalho
+  // Unregister shortcut
   Future<void> _unregisterHotkey() async {
     await hotKeyManager.unregisterAll();
   }
   
-  // Alterna entre mostrar e esconder a janela
+  // Toggle window visibility
   Future<void> _toggleWindowVisibility() async {
     bool isVisible = await windowManager.isVisible();
     if (isVisible) {
       await windowManager.hide();
     } else {
-      _showWindow(); // Sem await, pois _showWindow não retorna Future
+      _showWindow(); // No await, as _showWindow doesn't return Future
     }
   }
   
-  // Adicionar tarefa
+  // Add task
   Future<void> _addTask() async {
-    // Validação básica
+    // Basic validation
     if (_titleController.text.isEmpty) {
       setState(() {
-        _errorMessage = 'Por favor, informe um título para a tarefa';
+        _errorMessage = 'Please enter a task title';
         _successMessage = '';
       });
       return;
@@ -356,12 +356,12 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
       );
       
       setState(() {
-        _successMessage = 'Tarefa adicionada com sucesso!';
+        _successMessage = 'Task added successfully!';
         _titleController.clear();
         _notesController.clear();
       });
       
-      // Limpa a mensagem de sucesso após 3 segundos
+      // Clear success message after 3 seconds
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) {
           setState(() {
@@ -383,20 +383,20 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
     }
   }
   
-  // Fazer logout
+  // Logout
   Future<void> _logout() async {
     await _nirvanaService.logout();
     widget.onLogout();
   }
   
-  // --- Métodos específicos do Windows ---
+  // --- Windows-specific methods ---
   
   void _showWindow() {
     if (_isWindows) {
       windowManager.show();
       windowManager.focus();
       
-      // Foca no campo de título quando a janela é aberta
+      // Focus on title field when window is opened
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _titleFocusNode.requestFocus();
       });
@@ -429,12 +429,12 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
     }
   }
 
-  // Processa a tecla Ctrl+Enter
+  // Process Ctrl+Enter key
   void _handleKeyPress(RawKeyEvent event) {
     if (event is RawKeyDownEvent &&
         event.isControlPressed &&
         event.logicalKey == LogicalKeyboardKey.enter) {
-      // Adiciona a tarefa e minimiza para o tray
+      // Add task and minimize to tray
       _addTask().then((_) {
         if (_isWindows) {
           windowManager.hide();
@@ -447,12 +447,12 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Adicionar Tarefa'),
+        title: const Text('Add Task'),
         actions: [
           IconButton(
             icon: const Icon(Icons.logout),
             onPressed: _logout,
-            tooltip: 'Sair',
+            tooltip: 'Logout',
           ),
         ],
       ),
@@ -470,11 +470,11 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Informação de usuário logado
+                  // Logged in user information
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16.0),
                     child: Text(
-                      'Logado como: ${widget.userEmail}',
+                      'Logged in as: ${widget.userEmail}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[700],
@@ -482,29 +482,29 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
                     ),
                   ),
                   
-                  // Campo de título com foco automático
+                  // Title field with auto focus
                   TextField(
                     controller: _titleController,
                     focusNode: _titleFocusNode,
                     decoration: const InputDecoration(
-                      labelText: 'Título da Tarefa',
+                      labelText: 'Task Title',
                       border: OutlineInputBorder(),
-                      hintText: 'Pressione Ctrl+Enter para adicionar',
+                      hintText: 'Press Ctrl+Enter to add',
                     ),
                   ),
                   const SizedBox(height: 16),
                   
-                  // Campo de notas
+                  // Notes field
                   TextField(
                     controller: _notesController,
                     decoration: const InputDecoration(
-                      labelText: 'Notas/Comentários',
+                      labelText: 'Notes/Comments',
                       border: OutlineInputBorder(),
                     ),
                     maxLines: 5,
                   ),
                   
-                  // Mensagens de erro/sucesso
+                  // Error/success messages
                   if (_errorMessage.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
@@ -524,7 +524,7 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
                   
                   const SizedBox(height: 24),
                   
-                  // Botão de adicionar
+                  // Add button
                   ElevatedButton(
                     onPressed: _isLoading ? null : _addTask,
                     style: ElevatedButton.styleFrom(
@@ -536,15 +536,15 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
                             height: 24,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Adicionar Tarefa'),
+                        : const Text('Add Task'),
                   ),
                   
-                  // Dica para Windows
+                  // Windows tip
                   if (_isWindows)
                     Padding(
                       padding: const EdgeInsets.only(top: 16),
                       child: Text(
-                        'O aplicativo continuará rodando na bandeja do sistema quando fechado.',
+                        'The app will continue running in the system tray when closed.',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey[600],
