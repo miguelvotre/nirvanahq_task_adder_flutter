@@ -281,8 +281,13 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
 
   // Inicializa o system tray
   Future<void> _initTray() async {
+    // Só inicializa no Windows
+    if (!_isWindows) return;
+    
     trayManager.addListener(this);
-    await trayManager.setIcon('assets/flutter_logo.ico');
+    
+    // Atualizado para usar o caminho correto
+    await trayManager.setIcon('assets/images/logo.ico');
     await trayManager.setToolTip("Nirvana Task Adder");
     
     await trayManager.setContextMenu(
