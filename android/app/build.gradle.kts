@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.example.nirvanahq_task_adder_flutter"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -41,4 +41,9 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation("com.google.errorprone:error_prone_annotations:2.15.0")
+    implementation("com.google.code.findbugs:jsr305:3.0.2")
 }

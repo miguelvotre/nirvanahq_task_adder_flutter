@@ -5,6 +5,7 @@ import 'package:hotkey_manager/hotkey_manager.dart';
 import 'dart:io' show Platform;
 import 'services/nirvana_service.dart';
 import 'package:flutter/services.dart';
+import 'dart:convert';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,12 +48,16 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool _isAuthenticated = false;
   String _userEmail = '';
+  String _sharedText = '';
+  String _sharedUrl = '';
   final NirvanaService _nirvanaService = NirvanaService();
 
   @override
   void initState() {
     super.initState();
     _checkAuth();
+    // Check for shared text
+    _checkForSharedText();
   }
 
   // Check if user is already authenticated
@@ -62,6 +67,43 @@ class _MyAppState extends State<MyApp> {
       _isAuthenticated = authInfo['token'] != null;
       _userEmail = authInfo['email'] ?? '';
     });
+  }
+
+  // Check for shared text from other apps
+  Future<void> _checkForSharedText() async {
+    try {
+      const platform = MethodChannel('com.example.nirvanahq_task_adder_flutter/share');
+      final String? sharedText = await platform.invokeMethod('getSharedText');
+      
+      if (sharedText != null && sharedText.isNotEmpty) {
+        try {
+          // Parse JSON from the Android side
+          final Map<String, dynamic> sharedData = jsonDecode(sharedText);
+          final String title = sharedData['title'] ?? '';
+          final String url = sharedData['url'] ?? '';
+          
+          setState(() {
+            // Title will be the page title, URL will go in the comments
+            if (title.isNotEmpty) {
+              _sharedText = title;
+              _sharedUrl = url;
+            } else {
+              // If no title, use URL as title (fallback)
+              _sharedText = url;
+              _sharedUrl = '';
+            }
+          });
+        } catch (e) {
+          // If not JSON, use as title (backward compatibility)
+          setState(() {
+            _sharedText = sharedText;
+            _sharedUrl = '';
+          });
+        }
+      }
+    } catch (e) {
+      print('Error retrieving shared text: $e');
+    }
   }
 
   @override
@@ -76,6 +118,8 @@ class _MyAppState extends State<MyApp> {
       home: _isAuthenticated 
           ? TaskPage(
               userEmail: _userEmail,
+              sharedText: _sharedText,
+              sharedUrl: _sharedUrl,
               onLogout: () {
                 setState(() {
                   _isAuthenticated = false;
@@ -222,9 +266,17 @@ class _LoginPageState extends State<LoginPage> {
 // Add Task Screen
 class TaskPage extends StatefulWidget {
   final String userEmail;
+  final String sharedText;
+  final String sharedUrl;
   final VoidCallback onLogout;
   
-  const TaskPage({Key? key, required this.userEmail, required this.onLogout}) : super(key: key);
+  const TaskPage({
+    Key? key, 
+    required this.userEmail, 
+    required this.onLogout,
+    this.sharedText = '',
+    this.sharedUrl = '',
+  }) : super(key: key);
 
   @override
   _TaskPageState createState() => _TaskPageState();
@@ -252,10 +304,25 @@ class _TaskPageState extends State<TaskPage> with WindowListener, TrayListener {
       _registerHotkey();
     }
     
-    // Focus on title field on initialization
+    // Force focus on title field and open keyboard
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _titleFocusNode.requestFocus();
+      
+      // Force keyboard to appear
+      if (!_isWindows) {
+        SystemChannels.textInput.invokeMethod('TextInput.show');
+      }
     });
+
+    // Fill in text fields if shared from another app
+    if (widget.sharedText.isNotEmpty) {
+      _titleController.text = widget.sharedText;
+    }
+    
+    // If URL was shared, put it in the notes field
+    if (widget.sharedUrl.isNotEmpty) {
+      _notesController.text = widget.sharedUrl;
+    }
   }
 
   @override
